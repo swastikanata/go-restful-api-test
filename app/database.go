@@ -10,7 +10,7 @@ import (
 
 // NewDB initializes the database connection using GORM
 func NewDB() *gorm.DB {
-	dsn := "root:Fortun1.@tcp(localhost:3306)/sample_pos_db?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "root:password.@tcp(localhost:3306)/sample_pos_db?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info), // Logging SQL queries
 	})
