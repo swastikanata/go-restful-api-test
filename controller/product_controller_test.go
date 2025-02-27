@@ -48,17 +48,17 @@ func TestProductController(t *testing.T) {
 			name:   "Update product - success",
 			method: "PUT",
 			url:    "/api/products/1",
-			body:   web.ProductUpdateRequest{Id: 1, Name: "Updated"},
+			body:   web.ProductUpdateRequest{Id: 1, Name: "Updated Test", Description: "Test", Price: 1, StockQty: 1, CategoryID: 1, SKU: "test", TaxRate: 1.0},
 			setupMock: func() {
 				mockService.EXPECT().
 					Update(gomock.Any(), gomock.Any()).
-					Return(web.ProductResponse{Id: 1, Name: "Updated"}, nil)
+					Return(web.ProductResponse{Id: 1, Name: "Updated Test", Description: "Test", Price: 1, StockQty: 1, CategoryID: 1, SKU: "test", TaxRate: 1.0}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody: web.WebResponse{
 				Code:   http.StatusOK,
 				Status: "OK",
-				Data:   web.ProductResponse{Id: 1, Name: "Updated"},
+				Data:   web.ProductResponse{Id: 1, Name: "Updated Test", Description: "Test", Price: 1, StockQty: 1, CategoryID: 1, SKU: "test", TaxRate: 1.0},
 			},
 		},
 	}
@@ -83,8 +83,14 @@ func TestProductController(t *testing.T) {
 
 			if dataMap, ok := respBody.Data.(map[string]interface{}); ok {
 				respBody.Data = web.ProductResponse{
-					Id:   uint64(dataMap["id"].(float64)),
-					Name: dataMap["name"].(string),
+					Id:          uint64(dataMap["id"].(float64)),
+					Name:        dataMap["name"].(string),
+					Description: dataMap["description"].(string),
+					Price:       dataMap["price"].(float64),
+					StockQty:    int(dataMap["stock_qty"].(float64)),
+					CategoryID:  uint64(dataMap["category_id"].(float64)),
+					SKU:         dataMap["sku"].(string),
+					TaxRate:     dataMap["tax_rate"].(float64),
 				}
 			}
 

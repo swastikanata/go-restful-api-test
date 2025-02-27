@@ -48,17 +48,17 @@ func TestCustomerController(t *testing.T) {
 			name:   "Update customer - success",
 			method: "PUT",
 			url:    "/api/customers/1",
-			body:   web.CustomerUpdateRequest{Id: 1, Name: "Updated"},
+			body:   web.CustomerUpdateRequest{Id: 1, Name: "Updated Test", Email: "test@test.com", Phone: "123456", Address: "test street", LoyaltyPts: 1},
 			setupMock: func() {
 				mockService.EXPECT().
 					Update(gomock.Any(), gomock.Any()).
-					Return(web.CustomerResponse{Id: 1, Name: "Updated"}, nil)
+					Return(web.CustomerResponse{Id: 1, Name: "Updated Test", Email: "test@test.com", Phone: "123456", Address: "test street", LoyaltyPts: 1}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody: web.WebResponse{
 				Code:   http.StatusOK,
 				Status: "OK",
-				Data:   web.CustomerResponse{Id: 1, Name: "Updated"},
+				Data:   web.CustomerResponse{Id: 1, Name: "Updated Test", Email: "test@test.com", Phone: "123456", Address: "test street", LoyaltyPts: 1},
 			},
 		},
 	}
@@ -83,8 +83,12 @@ func TestCustomerController(t *testing.T) {
 
 			if dataMap, ok := respBody.Data.(map[string]interface{}); ok {
 				respBody.Data = web.CustomerResponse{
-					Id:   uint64(dataMap["id"].(float64)),
-					Name: dataMap["name"].(string),
+					Id:         uint64(dataMap["id"].(float64)),
+					Name:       dataMap["name"].(string),
+					Email:      dataMap["email"].(string),
+					Phone:      dataMap["phone"].(string),
+					Address:    dataMap["address"].(string),
+					LoyaltyPts: int(dataMap["loyalty_points"].(float64)),
 				}
 			}
 

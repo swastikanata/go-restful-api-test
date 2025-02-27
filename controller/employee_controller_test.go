@@ -48,17 +48,17 @@ func TestEmployeeController(t *testing.T) {
 			name:   "Update employee - success",
 			method: "PUT",
 			url:    "/api/employees/1",
-			body:   web.EmployeeUpdateRequest{Id: 1, Name: "Updated"},
+			body:   web.EmployeeUpdateRequest{Id: 1, Name: "Updated Test", Email: "test@test.com", Phone: "123456", DateHired: "01/01/2025"},
 			setupMock: func() {
 				mockService.EXPECT().
 					Update(gomock.Any(), gomock.Any()).
-					Return(web.EmployeeResponse{Id: 1, Name: "Updated"}, nil)
+					Return(web.EmployeeResponse{Id: 1, Name: "Updated Test", Email: "test@test.com", Phone: "123456", DateHired: "01/01/2025"}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody: web.WebResponse{
 				Code:   http.StatusOK,
 				Status: "OK",
-				Data:   web.EmployeeResponse{Id: 1, Name: "Updated"},
+				Data:   web.EmployeeResponse{Id: 1, Name: "Updated Test", Email: "test@test.com", Phone: "123456", DateHired: "01/01/2025"},
 			},
 		},
 	}
@@ -83,8 +83,11 @@ func TestEmployeeController(t *testing.T) {
 
 			if dataMap, ok := respBody.Data.(map[string]interface{}); ok {
 				respBody.Data = web.EmployeeResponse{
-					Id:   uint64(dataMap["id"].(float64)),
-					Name: dataMap["name"].(string),
+					Id:        uint64(dataMap["id"].(float64)),
+					Name:      dataMap["name"].(string),
+					Email:     dataMap["email"].(string),
+					Phone:     dataMap["phone"].(string),
+					DateHired: dataMap["date_hired"].(string),
 				}
 			}
 
