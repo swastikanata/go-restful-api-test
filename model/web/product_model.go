@@ -27,7 +27,7 @@ type ProductResponse struct {
 	Description string  `json:"description"`
 	Price       float64 `json:"price"`
 	StockQty    int     `json:"stock_qty"`
-	CategoryID  int     `json:"category_id"`
+	CategoryID  uint64  `json:"category_id"`
 	SKU         string  `json:"sku"`
 	TaxRate     float64 `json:"tax_rate"`
 }
