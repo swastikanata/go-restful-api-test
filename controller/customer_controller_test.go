@@ -13,27 +13,27 @@ import (
 	"testing"
 )
 
-func setupTestAppCategory(mockService *mocks.MockCategoryService) *fiber.App {
+func setupTestAppCustomer(mockService *mocks.MockCustomerService) *fiber.App {
 	app := fiber.New()
-	categoryController := NewCategoryController(mockService)
+	customerController := NewCustomerController(mockService)
 
 	api := app.Group("/api")
-	categories := api.Group("/categories")
-	categories.Post("/", categoryController.Create)
-	categories.Put("/:categoryId", categoryController.Update)
-	categories.Delete("/:categoryId", categoryController.Delete)
-	categories.Get("/:categoryId", categoryController.FindById)
-	categories.Get("/", categoryController.FindAll)
+	customers := api.Group("/customers")
+	customers.Post("/", customerController.Create)
+	customers.Put("/:customerId", customerController.Update)
+	customers.Delete("/:customerId", customerController.Delete)
+	customers.Get("/:customerId", customerController.FindById)
+	customers.Get("/", customerController.FindAll)
 
 	return app
 }
 
-func TestCategoryController(t *testing.T) {
+func TestCustomerController(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockService := mocks.NewMockCategoryService(ctrl)
-	app := setupTestAppCategory(mockService)
+	mockService := mocks.NewMockCustomerService(ctrl)
+	app := setupTestAppCustomer(mockService)
 
 	tests := []struct {
 		name           string
@@ -45,20 +45,20 @@ func TestCategoryController(t *testing.T) {
 		expectedBody   web.WebResponse
 	}{
 		{
-			name:   "Update category - success",
+			name:   "Update customer - success",
 			method: "PUT",
-			url:    "/api/categories/1",
-			body:   web.CategoryUpdateRequest{Id: 1, Name: "Updated"},
+			url:    "/api/customers/1",
+			body:   web.CustomerUpdateRequest{Id: 1, Name: "Updated"},
 			setupMock: func() {
 				mockService.EXPECT().
 					Update(gomock.Any(), gomock.Any()).
-					Return(web.CategoryResponse{Id: 1, Name: "Updated"}, nil)
+					Return(web.CustomerResponse{Id: 1, Name: "Updated"}, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody: web.WebResponse{
 				Code:   http.StatusOK,
 				Status: "OK",
-				Data:   web.CategoryResponse{Id: 1, Name: "Updated"},
+				Data:   web.CustomerResponse{Id: 1, Name: "Updated"},
 			},
 		},
 	}
@@ -82,7 +82,7 @@ func TestCategoryController(t *testing.T) {
 			json.NewDecoder(resp.Body).Decode(&respBody)
 
 			if dataMap, ok := respBody.Data.(map[string]interface{}); ok {
-				respBody.Data = web.CategoryResponse{
+				respBody.Data = web.CustomerResponse{
 					Id:   uint64(dataMap["id"].(float64)),
 					Name: dataMap["name"].(string),
 				}

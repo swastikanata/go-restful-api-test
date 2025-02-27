@@ -1,7 +1,7 @@
 package web
 
 type ProductCreateRequest struct {
-	Name        string  `json:"name" validate:"required,max=32,min=10"`
+	Name        string  `json:"name" validate:"required,max=32,min=1"`
 	Description string  `json:"description"`
 	Price       float64 `json:"price" validate:"required,gte=0"`
 	StockQty    int     `json:"stock_qty" validate:"required,gte=0"`
@@ -12,7 +12,7 @@ type ProductCreateRequest struct {
 
 type ProductUpdateRequest struct {
 	Id          uint64  `json:"id" validate:"required,gte=0"`
-	Name        string  `json:"name" validate:"required,max=32,min=10"`
+	Name        string  `json:"name" validate:"required,max=32,min=1"`
 	Description string  `json:"description"`
 	Price       float64 `json:"price" validate:"required,gte=0"`
 	StockQty    int     `json:"stock_qty" validate:"required,gte=0"`

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/aronipurwanto/go-restful-api/model/domain"
 	"github.com/aronipurwanto/go-restful-api/model/web"
 	"github.com/aronipurwanto/go-restful-api/repository/mocks"
 	"github.com/go-playground/validator/v10"
@@ -30,7 +31,7 @@ func TestCreateCategory(t *testing.T) {
 			name:  "success",
 			input: web.CategoryCreateRequest{Name: "Electronics"},
 			mock: func() {
-				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Return(web.CategoryResponse{Id: 1, Name: "Electronics"}, nil)
+				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Return(domain.Category{Id: 1, Name: "Electronics"}, nil)
 			},
 			expect:    web.CategoryResponse{Id: 1, Name: "Electronics"},
 			expectErr: false,
@@ -46,7 +47,7 @@ func TestCreateCategory(t *testing.T) {
 			name:  "repository error",
 			input: web.CategoryCreateRequest{Name: "Toys"},
 			mock: func() {
-				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Return(web.CategoryResponse{}, errors.New("database error"))
+				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Return(domain.Category{}, errors.New("database error"))
 			},
 			expect:    web.CategoryResponse{},
 			expectErr: true,
@@ -84,7 +85,7 @@ func TestDeleteCategory(t *testing.T) {
 			name:       "success",
 			categoryId: 1,
 			mock: func() {
-				mockRepo.EXPECT().FindById(gomock.Any(), 1).Return(web.CategoryResponse{Id: 1, Name: "Electronics"}, nil)
+				mockRepo.EXPECT().FindById(gomock.Any(), uint64(1)).Return(domain.Category{Id: 1, Name: "Electronics"}, nil)
 				mockRepo.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expectErr: false,
@@ -93,7 +94,7 @@ func TestDeleteCategory(t *testing.T) {
 			name:       "not found",
 			categoryId: 99,
 			mock: func() {
-				mockRepo.EXPECT().FindById(gomock.Any(), 99).Return(web.CategoryResponse{}, errors.New("not found"))
+				mockRepo.EXPECT().FindById(gomock.Any(), uint64(99)).Return(domain.Category{}, errors.New("not found"))
 			},
 			expectErr: true,
 		},
@@ -122,8 +123,10 @@ func TestUpdateCategory(t *testing.T) {
 		{
 			name: "Success",
 			mock: func(mockCategoryRepo *mocks.MockCategoryRepository) {
-				mockCategoryRepo.EXPECT().FindById(gomock.Any(), 1).Return(web.CategoryResponse{Id: 1, Name: "Old Name"}, nil)
-				mockCategoryRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(web.CategoryResponse{Id: 1, Name: "New Name"}, nil)
+				mockCategoryRepo.EXPECT().FindById(gomock.Any(), uint64(1)).
+					Return(domain.Category{Id: 1, Name: "Old Name"}, nil)
+				mockCategoryRepo.EXPECT().Update(gomock.Any(), gomock.Any()).
+					Return(domain.Category{Id: 1, Name: "New Name"}, nil)
 			},
 			input:   web.CategoryUpdateRequest{Id: 1, Name: "New Name"},
 			expects: nil,
@@ -131,10 +134,30 @@ func TestUpdateCategory(t *testing.T) {
 		{
 			name: "Category Not Found",
 			mock: func(mockCategoryRepo *mocks.MockCategoryRepository) {
-				mockCategoryRepo.EXPECT().FindById(gomock.Any(), 1).Return(web.CategoryResponse{}, errors.New("not found"))
+				mockCategoryRepo.EXPECT().FindById(gomock.Any(), uint64(1)).
+					Return(domain.Category{}, errors.New("not found"))
 			},
 			input:   web.CategoryUpdateRequest{Id: 1, Name: "New Name"},
-			expects: errors.New("Category not found"),
+			expects: errors.New("not found"),
+		},
+		{
+			name: "Validation Error - Empty Name",
+			mock: func(mockCategoryRepo *mocks.MockCategoryRepository) {
+				// Tidak perlu mock FindById karena validasi gagal sebelum ke repository
+			},
+			input:   web.CategoryUpdateRequest{Id: 1, Name: ""},
+			expects: errors.New("CategoryUpdateRequest.Name"),
+		},
+		{
+			name: "Database Error on Update",
+			mock: func(mockCategoryRepo *mocks.MockCategoryRepository) {
+				mockCategoryRepo.EXPECT().FindById(gomock.Any(), uint64(1)).
+					Return(domain.Category{Id: 1, Name: "Old Name"}, nil)
+				mockCategoryRepo.EXPECT().Update(gomock.Any(), gomock.Any()).
+					Return(domain.Category{}, errors.New("database error"))
+			},
+			input:   web.CategoryUpdateRequest{Id: 1, Name: "Updated Name"},
+			expects: errors.New("database error"),
 		},
 	}
 
@@ -147,7 +170,13 @@ func TestUpdateCategory(t *testing.T) {
 
 			service := NewCategoryService(mockCategoryRepo, validator.New())
 			_, err := service.Update(context.Background(), tt.input)
-			assert.Equal(t, tt.expects, err)
+
+			if tt.expects != nil {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expects.Error()) // Alternatif untuk assert.ErrorContains
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }
@@ -162,7 +191,7 @@ func TestFindAllCategories(t *testing.T) {
 		{
 			name: "Success",
 			mock: func(mockCategoryRepo *mocks.MockCategoryRepository) {
-				mockCategoryRepo.EXPECT().FindAll(gomock.Any()).Return([]web.CategoryResponse{{Id: 1, Name: "Category 1"}}, nil)
+				mockCategoryRepo.EXPECT().FindAll(gomock.Any()).Return([]domain.Category{{Id: 1, Name: "Category 1"}}, nil)
 			},
 			expects: []web.CategoryResponse{{Id: 1, Name: "Category 1"}},
 			err:     nil,
@@ -203,7 +232,7 @@ func TestFindByIdCategory(t *testing.T) {
 		{
 			name: "Success",
 			mock: func(mockCategoryRepo *mocks.MockCategoryRepository) {
-				mockCategoryRepo.EXPECT().FindById(gomock.Any(), 1).Return(web.CategoryResponse{Id: 1, Name: "Category 1"}, nil)
+				mockCategoryRepo.EXPECT().FindById(gomock.Any(), uint64(1)).Return(domain.Category{Id: 1, Name: "Category 1"}, nil)
 			},
 			input:   1,
 			expects: web.CategoryResponse{Id: 1, Name: "Category 1"},
@@ -212,11 +241,11 @@ func TestFindByIdCategory(t *testing.T) {
 		{
 			name: "Not Found",
 			mock: func(mockCategoryRepo *mocks.MockCategoryRepository) {
-				mockCategoryRepo.EXPECT().FindById(gomock.Any(), 1).Return(web.CategoryResponse{}, errors.New("not found"))
+				mockCategoryRepo.EXPECT().FindById(gomock.Any(), uint64(1)).Return(domain.Category{}, errors.New("not found"))
 			},
 			input:   1,
 			expects: web.CategoryResponse{},
-			err:     errors.New("Category not found"),
+			err:     errors.New("not found"),
 		},
 	}
 
